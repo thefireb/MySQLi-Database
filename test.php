@@ -3,7 +3,7 @@
 /**
  * Require main class file
  */
-require_once dirname(__FILE__) . '/MySQLi_Handler.php';
+require_once dirname(__FILE__) . '/mysqli-database.php';
 
 /**
  * Setup database connection with Singleton pattern.
