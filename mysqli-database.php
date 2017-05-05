@@ -199,6 +199,7 @@ class MySQLi_Handler
             }
         
         }
+        
         return $this->results;
     }
 
@@ -253,8 +254,6 @@ class MySQLi_Handler
         
         }
         $query = $this->cutFrom($query);
-
-        return $query;
 
         return $this->query($query);
     }
