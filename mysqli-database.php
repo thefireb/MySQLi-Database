@@ -102,6 +102,8 @@ class MySQLi_Handler
      */
     private $_handler;
 
+    private $_errors = array();
+
     /**
      * Class constructor
      * 
@@ -205,11 +207,22 @@ class MySQLi_Handler
         return ($this->count >= 1) ? true : false;
     }
 
-    public function remove($find, $from) {
+    public function remove($find, $from)
+    {
         if (in_array($from, $find)) {
             return true;
         }
         return false;
+    }
+
+    public function addError($message)
+    {
+        $this->_errors[] = $message;
+    }
+
+    public function errors()
+    {
+        return $this->_errors;
     }
 
     /**
@@ -239,13 +252,20 @@ class MySQLi_Handler
             $query .= "`{$column}` = '{$content}', ";
         
         }
-        $query = $this->cutFrom($query, ', ', 'right');
+        $query = $this->cutFrom($query);
+
+        return $query;
 
         return $this->query($query);
     }
 
     public function cutFrom($string, $where = '', $position = 'both')
     {
+        if (empty($where)) {
+            $this->addError("Please fill this space.");
+            return;
+        }
+
         switch ($position) {
             case 'both':
                 $from = trim($string, $where);
