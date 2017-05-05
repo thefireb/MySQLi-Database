@@ -24,7 +24,7 @@
  * @author     Anass Rahou
  * @package    MySQLi_Handler
  * @copyright  Copyright (c) 2016 - 2017
- * @license    https://opensource.org/licenses/MIT
+ * @license    https://www.gnu.org/licenses/gpl-2.0.html
  * @version    2.1
  * @since      1.0
 */
@@ -82,25 +82,25 @@ class MySQLi_Handler
      * MySQL user name
      * @var string
      */
-    private $username;          
+    private $_username;          
     
     /**
      * MySQL password
      * @var string
      */
-    private $password;
+    private $_password;
     
     /**
      * MySQL database name
      * @var string
      */
-    private $database;
+    private $_database;
     
     /**
      * MySQL connection link
      * @var object
      */
-    private $handler;
+    private $_handler;
 
     /**
      * Class constructor
@@ -112,16 +112,16 @@ class MySQLi_Handler
         // Ensure correct internal encoding
         mb_internal_encoding("UTF-8");
 
-        $this->hostname = $data['hostname'];
-        $this->username = $data['username'];
-        $this->password = $data['password'];
-        $this->database = $data['database'];
+        $this->_hostname = $data['hostname'];
+        $this->_username = $data['username'];
+        $this->_password = $data['password'];
+        $this->_database = $data['database'];
 
         $this->handler = @new mysqli(
-            $this->hostname,
-            $this->username,
-            $this->password,
-            $this->database
+            $this->_hostname,
+            $this->_username,
+            $this->_password,
+            $this->_database
         );
 
         try {
