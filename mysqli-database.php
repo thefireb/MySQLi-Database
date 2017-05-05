@@ -109,9 +109,6 @@ class MySQLi_Handler
      */
     private function __construct($data)
     {
-        // Ensure correct internal encoding
-        mb_internal_encoding("UTF-8");
-
         $this->_hostname = $data['hostname'];
         $this->_username = $data['username'];
         $this->_password = $data['password'];
@@ -194,6 +191,7 @@ class MySQLi_Handler
         } elseif ($this->count > 1) {
 
             $this->results = array();
+            
             while ($data = $this->result->fetch_array($mode)) {
                 $this->results[] = $data;
             }
@@ -205,6 +203,13 @@ class MySQLi_Handler
     public function haveResults()
     {
         return ($this->count >= 1) ? true : false;
+    }
+
+    public function remove($find, $from) {
+        if (in_array($from, $find)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -221,26 +226,45 @@ class MySQLi_Handler
             $excluded = explode(', ', $excluded);
         }
 
-        return $excluded;
-
-        // Automatically exclude this one
+        // Add MAX_FILE_SIZE to excluded columns.
         array_push($excluded, 'MAX_FILE_SIZE');
         
         $query = "INSERT INTO `{$table}` SET ";
         
         foreach ($contents as $column => $content) {
-            
-            if (in_array($column, $excluded)) {
+
+            if ($this->remove($excluded, $column)) {
                 continue;
             }
             $query .= "`{$column}` = '{$content}', ";
         
         }
+        $query = $this->cutFrom($query, ', ', 'right');
 
-        $query = trim($query, ', ');
-
-        return $query;
         return $this->query($query);
+    }
+
+    public function cutFrom($string, $where = '', $position = 'both')
+    {
+        switch ($position) {
+            case 'both':
+                $from = trim($string, $where);
+                break;
+            
+            case 'left':
+                $from = ltrim($string, $where);
+                break;
+
+            case 'right':
+                $from = rtrim($string, $where);
+                break;
+
+            default:
+                $from = trim($string, $where);
+                break;
+        }
+
+        return $from;
     }
 
     /**
