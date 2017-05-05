@@ -215,15 +215,16 @@ class MySQLi_Handler
      * @param    array                $contents     Column names and content to be inserted as array value
      * @param    string               $excluded     The excluded column from insert query.
      */
-    public function insert($table, $contents, $excluded = '')
+    public function insert($table, $contents, $excluded = array())
     {
-        // Catch Exclusions
-        if ($excluded == '') {
-            $excluded = array();
+        if (is_string($excluded) && empty($excluded) !== null) {
+            $excluded = explode(', ', $excluded);
         }
 
+        return $excluded;
+
         // Automatically exclude this one
-        array_push($excluded, 'MAX_FILE_SIZE'); 
+        array_push($excluded, 'MAX_FILE_SIZE');
         
         $query = "INSERT INTO `{$table}` SET ";
         
@@ -237,6 +238,8 @@ class MySQLi_Handler
         }
 
         $query = trim($query, ', ');
+
+        return $query;
         return $this->query($query);
     }
 
