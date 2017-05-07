@@ -312,4 +312,12 @@ class Database
     {
         return $this->_count;
     }
+
+    /**
+     * Close database connection.
+     */
+    public function __destruct()
+    {
+        $this->_handler->close();
+    }
 }
