@@ -54,6 +54,8 @@ class Database
      */
     public $results = array();
 
+    public $error = false;
+
     /**
      * Object instance link
      * @var object
@@ -73,6 +75,24 @@ class Database
             $data['password'],
             $data['database']
         );
+
+        if ($this->_handler->connect_errno) {
+            $this->error = $this->_handler->connect_error;
+        }
+    }
+
+    public function isConnected()
+    {
+        if ($this->error === false) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function errorMessage()
+    {
+        return $this->error;
     }
 
     /**
@@ -152,6 +172,10 @@ class Database
      */
     public function query($sql)
     {
+        if (!$this->isConnected()) {
+            return false;
+        }
+
         $this->result = $this->_handler->query($sql);
 
         if (is_object($this->result)) {
@@ -313,11 +337,42 @@ class Database
         return $this->_count;
     }
 
+    // Performs a 'mysql_real_escape_string' on the entire array/string
+    private function SecureData($data, $types=array())
+    {
+        if(is_array($data)) {
+            
+            $i = 0;
+            foreach($data as $key => $val) {
+                if(!is_array($data[$key])) {
+                    $data[$key] = $this->cleaner($data[$key], $types[$i]);
+                    $data[$key] = $this->_handler->real_escape_string($data[$key]);
+                    $i++;
+                }
+            }
+
+        } else {
+            $data = $this->cleaner($data, $types);
+            $data = $this->_handler->real_escape_string($data);
+        }
+        return $data;
+    }
+
     /**
      * Close database connection.
      */
     public function __destruct()
     {
+        /**
+         * Check if has an active connection.
+         */
+        if (!$this->isConnected()) {
+            return;
+        }
+
+        /**
+         * Close mysqli connection.
+         */
         $this->_handler->close();
     }
 }
