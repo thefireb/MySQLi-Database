@@ -311,9 +311,6 @@ class Database
             
             }
 
-            
-            $conditions = $this->escape($conditions);
-
             $sql = "DELETE FROM `$table` WHERE ";
             foreach ($conditions as $column => $content) {
                 $sql .= "`$column` = '$content'";
