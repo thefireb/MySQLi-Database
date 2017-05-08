@@ -65,7 +65,7 @@ class Database
     /**
      * Class constructor
      * 
-     * @param    array     $data Database information connection
+     * @param array     $data Database information connection
      */
     private function __construct(array $data)
     {
@@ -84,20 +84,6 @@ class Database
         }
     }
 
-    public function isConnected()
-    {
-        if ($this->error === false) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public function errorMessage()
-    {
-        return $this->error;
-    }
-
     /**
      * Make a unique instance of class, if not exists.
      * 
@@ -111,6 +97,30 @@ class Database
         }
 
         return self::$_instance;
+    }
+
+    /**
+     * Check database connection.
+     * 
+     * @return boolean    True if connection exists.
+     */
+    public function isConnected()
+    {
+        if ($this->error === false) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Show a connection error message.
+     * 
+     * @return string    Error message
+     */
+    public function errorMessage()
+    {
+        return $this->error;
     }
 
     /**
