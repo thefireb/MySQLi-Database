@@ -311,13 +311,16 @@ class Database
             
             }
 
+            
+            $conditions = $this->escape($conditions);
+
             $sql = "DELETE FROM `$table` WHERE ";
             foreach ($conditions as $column => $content) {
                 $sql .= "`$column` = '$content'";
             }
 
         }
-
+        return $sql;
         return $this->query($sql);
     }
 
@@ -350,23 +353,50 @@ class Database
         return $this->_count;
     }
 
-    // Performs a 'mysql_real_escape_string' on the entire array/string
-    private function SecureData($data, $types=array())
+    private function cleaner($data, $type = '')
     {
-        if(is_array($data)) {
-            
-            $i = 0;
-            foreach($data as $key => $val) {
-                if(!is_array($data[$key])) {
-                    $data[$key] = $this->cleaner($data[$key], $types[$i]);
-                    $data[$key] = $this->_handler->real_escape_string($data[$key]);
-                    $i++;
-                }
-            }
-
-        } else {
-            $data = $this->cleaner($data, $types);
-            $data = $this->_handler->real_escape_string($data);
+        switch($type) {
+            case 'none':
+                // useless do not reaffect just do nothing
+                //$data = $data;
+                break;
+            case 'str':
+            case 'string':
+                settype( $data, 'string');
+                break;
+            case 'int':
+            case 'integer':
+                settype( $data, 'integer');
+                break;
+            case 'float':
+                settype( $data, 'float');
+                break;
+            case 'bool':
+            case 'boolean':
+                settype( $data, 'boolean');
+                break;
+            // Y-m-d H:i:s
+            // 2014-01-01 12:30:30
+            case 'datetime':
+                $data = trim( $data );
+                $data = preg_replace('/[^\d\-: ]/i', '', $data);
+                preg_match( '/^([\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2})$/', $data, $matches );
+                $data = $matches[1];
+                break;
+            case 'ts2dt':
+                settype( $data, 'integer');
+                $data = date('Y-m-d H:i:s', $data);
+                break;
+            // bonus types
+            case 'hexcolor':
+                preg_match( '/(#[0-9abcdef]{6})/i', $data, $matches );
+                $data = $matches[1];
+                break;
+            case 'email':
+                $data = filter_var($data, FILTER_VALIDATE_EMAIL);
+                break;
+            default:
+                break;
         }
         return $data;
     }
