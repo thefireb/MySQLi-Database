@@ -65,7 +65,7 @@ class Database
     /**
      * Class constructor
      * 
-     * @param array     $data Database information connection
+     * @param    array     $data Database information connection
      */
     private function __construct(array $data)
     {
