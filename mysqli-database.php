@@ -25,125 +25,90 @@
  * @package    MySQLi_Handler
  * @copyright  Copyright (c) 2016 - 2017
  * @license    https://www.gnu.org/licenses/gpl-2.0.html
- * @version    2.1
+ * @version    1.2
  * @since      1.0
 */
 class MySQLi_Handler
 {
     /**
-     * Object instance link
-     * @var object
-     */
-    private static $_instance;
-
-    /**
-     * Holds the last error
-     * @var string
-     */
-    public  $error;
-    
-    /**
-     * Holds the MySQL query result
-     * @var string
-     */
-    public  $result;
-    
-    /**
-     * Holds the total number of records returned
-     * @var string
-     */
-    public  $count;           
-    
-    /**
-     * Holds the total number of records affected
-     * @var string
-     */
-    public  $affected;
-    
-    /**
-     * Holds raw 'arrayed' results
-     * @var array
-     */
-    public  $rawResults;
-    
-    /**
-     * Holds an array of the result
-     * @var array
-     */
-    public  $results;
-    
-    /**
-     * MySQL host name
-     * @var string
-     */
-    private $hostname;
-
-    /**
-     * MySQL user name
-     * @var string
-     */
-    private $_username;          
-    
-    /**
-     * MySQL password
-     * @var string
-     */
-    private $_password;
-    
-    /**
-     * MySQL database name
-     * @var string
-     */
-    private $_database;
-    
-    /**
-     * MySQL connection link
+     * MySQL connection link.
      * @var object
      */
     private $_handler;
-
-    private $_errors = array();
+    
+    /**
+     * Holds the total number of records returned.
+     * @var string
+     */
+    private $_count = 0;
 
     /**
-     * Class constructor
+     * Handle query results.
+     * @var null
+     */
+    public $result = null;
+
+    /**
+     * Holds an array of the result.
+     * @var array
+     */
+    public $results = array();
+
+    /**
+     * Hanlde error message.
+     * @var mixed
+     */
+    public $error = false;
+
+    /**
+     * Count affected rows.
+     * @var integer
+     */
+    private $_affected;
+
+    /**
+     * Store Query string.
+     * @var string
+     */
+    private $_query = '';
+
+    /**
+     * Object instance link.
+     * @var object
+     */
+    private static $_instance = null;
+
+    /**
+     * Class constructor.
      * 
      * @param array     $data Database information connection
      */
-    private function __construct($data)
+    private function __construct(array $data)
     {
-        $this->_hostname = $data['hostname'];
-        $this->_username = $data['username'];
-        $this->_password = $data['password'];
-        $this->_database = $data['database'];
-
-        $this->handler = @new mysqli(
-            $this->_hostname,
-            $this->_username,
-            $this->_password,
-            $this->_database
+        $this->_handler = @new mysqli(
+            $data['hostname'],
+            $data['username'],
+            $data['password'],
+            $data['database']
         );
 
-        try {
-            // Throw an error message if not connected
-            if ($this->handler->connect_error) {
-                throw new \Exception("Error Database Connection : " . $this->handler->connect_error);
-            }
-        } catch (Exception $e) {
-            $this->error = $e->getMessage();
-            die($this->error);
+        /**
+         * If no connection, then setup an error message.
+         */
+        if ($this->_handler->connect_errno) {
+            $this->error = $this->_handler->connect_error;
         }
-
     }
 
     /**
      * Make a unique instance of class, if not exists.
      * 
-     * @param  array     $data MySQL server connection information
-     * @return object          Instance of unique object
+     * @param  array     $data    MySQL server connection information
+     * @return object             Instance of unique object
      */
     public static function getInstance($data)
     {
-        if (is_null(self::$_instance)) {
+        if (null === self::$_instance) {
             self::$_instance = new self($data);
         }
 
@@ -151,277 +116,420 @@ class MySQLi_Handler
     }
 
     /**
-     * MySQL execute query
+     * Check database connection.
      * 
-     * @param  string     $query A SQL query statement
-     * @return mixed
+     * @return boolean    True if connection exists.
+     */
+    public function isConnected()
+    {
+        if ($this->error === false) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Show a connection error message.
+     * 
+     * @return string    Error message
+     */
+    public function errorMessage()
+    {
+        /**
+         * Hanlde error message if not connected.
+         */
+        return $this->error;
+    }
+
+    /**
+     * Check if key exists in an array.
+     * 
+     * @param  string   $key        Key to search
+     * @param  array    $haystack   Array where to search
+     * @return string               Return value
+     */
+    public function in_array($key, $haystack)
+    {
+        $keys = array_keys($haystack);
+
+        foreach ($haystack as $k => $v) {
+            if (in_array($key, $keys)) {
+                return $haystack[$key];
+            }
+        }
+
+        return array();
+    }
+
+    /**
+     * Main class query.
+     * 
+     * @param  string   $sql    SQL to execute
+     * @return object           Handler of class
      */
     public function query($query)
     {
-        $this->result = $this->handler->query($query);
+        if (!$this->isConnected()) {
+            return false;
+        }
+
+        $this->_query = $query;
+
+        $this->result = $this->_handler->query($query);
 
         if (is_object($this->result)) {
-            $this->count = $this->result->num_rows;
-        } else {
-            $this->count = 0;
+            $this->_count = $this->result->num_rows;
         }
 
         return $this;
     }
 
     /**
-     * Array of multiple query results.
+     * Obtain Number of Affected Row
      * 
-     * @return array     An array of found results.
+     * @return integer    Number of rows
      */
-    public function results($mode = 'both')
+    public function affected()
     {
-        switch ($mode) {
-            case 'assoc':
-                $mode = MYSQLI_ASSOC;
-                break;
-            case 'numeric':
-                $mode = MYSQLI_NUM;
-                break;
-            default:
-                $mode = MYSQLI_BOTH;
-                break;
-        }
+        /**
+         * Return number of rows.
+         */
+        return $this->_handler->affected_rows;
+    }
 
-        if ($this->count == 1) {
-            $this->results = $this->result->fetch_array($mode);
-        } elseif ($this->count > 1) {
-
-            $this->results = array();
+    /**
+     * Perform a select query to the database.
+     * 
+     * @param  array    $contents   Content to insert
+     * @param  string   $operator   SQL Operator
+     * @return object               Handler of class
+     */
+    public function select(array $contents, $operator = 'AND')
+    {
+        if ($this->in_array('table', $contents)) {
             
-            while ($data = $this->result->fetch_array($mode)) {
-                $this->results[] = $data;
-            }
+            $table = $contents['table'];
+            unset($contents['table']);
         
         }
-        
+
+        $contents = $this->escape($contents, $this->typper($contents));
+
+        $query = "SELECT * FROM `$table`";
+
+        if (count($contents) >= 1) {
+            $query .= " WHERE ";
+        }
+
+        $i = 0;
+        foreach ($contents as $column => $content) {
+            $i++;
+            if (count($contents) != $i) {
+                $query .= "`$column` = '$content' $operator ";
+            } else {
+                $query .= "`$column` = '$content'";
+            }
+        }
+
+        return $this->query($query);
+    }
+
+    /**
+     * Results from query.
+     * 
+     * @param  string   $type   Type of array
+     * @return array            Results array
+     */
+    public function results($type = 'assoc')
+    {
+        if ($this->count()) {
+
+            switch ($type) {
+                case 'assoc':
+                case 'associative':
+                    $type = MYSQLI_ASSOC;
+                    break;
+
+                case 'num':
+                case 'numeral':
+                case 'numeric':
+                    $type = MYSQLI_NUM;
+                    break;
+                
+                default:
+                    $type = MYSQLI_BOTH;
+                    break;
+            }
+
+            if ($this->count() > 1) {
+                $this->results = $this->result->fetch_all($type);
+            } else {
+                $this->results = $this->result->fetch_array($type);
+            }
+        }
+
         return $this->results;
     }
 
-    public function haveResults()
+    /**
+     * Perform an insert query to the database.
+     * 
+     * @param  array    $contents   Content to insert
+     * @return object               Handler of class
+     */
+    public function insert(array $contents)
     {
-        return ($this->count >= 1) ? true : false;
+        if (count($contents)) {
+            
+            if ($this->in_array('table', $contents)) {
+                
+                $table = $contents['table'];
+                unset($contents['table']);
+            
+            }
+
+            $contents = $this->escape($contents, $this->typper($contents));
+
+            $query = "INSERT INTO `{$table}`";
+            $query .= " (" . implode(', ', array_keys($contents)) . ") VALUES";
+            $query .= " ('" . implode('\', \'', $contents) . "')";
+        }
+
+        return $this->query($query);
     }
 
-    public function remove($find, $from)
+    /**
+     * Perform an update query to the database.
+     * 
+     * @param  array    $contents     Content to update
+     * @param  array    $conditons    Condition to meet
+     * @return object                 Handler of class
+     */
+    public function update(array $contents, array $conditons)
     {
-        if (in_array($from, $find)) {
-            return true;
+        if ($this->in_array('table', $contents)) {
+            
+            $table = $contents['table'];
+            unset($contents['table']);
+        
+        }
+
+        $contents = $this->escape($contents, $this->typper($contents));
+
+        $query = "UPDATE `$table` SET ";
+
+        $i = 0;
+        foreach ($contents as $column => $content) {
+            $i++;
+            
+            if (count($contents) != $i) {
+                $query .= "`$column` = '$content', ";
+            } else {
+                $query .= "`$column` = '$content'";
+            }
+        }
+
+        $conditons = $this->escape($conditons, $this->typper($conditons));
+
+        $query .= " WHERE ";
+
+        foreach ($conditons as $column => $content) {
+            $query .= "`$column` = '$content'";
+        }
+
+        return $this->query($query);
+    }
+
+    /**
+     * Perform a delete query to the database.
+     * 
+     * @param  array      $conditions     Content to delete
+     * @return object                     Handler of class
+     */
+    public function delete($conditions)
+    {
+        if (count($conditions)) {
+
+            if ($this->in_array('table', $conditions)) {
+                
+                $table = $conditions['table'];
+                unset($conditions['table']);
+            
+            }
+
+            $conditions = $this->escape($conditions, $this->typper($conditions));
+
+            $query = "DELETE FROM `$table` WHERE ";
+            $i = 0;
+            foreach ($conditions as $column => $content) {
+                $i++;
+                $query .= "`$column` = '$content' AND ";
+                if (count($conditions) == $i) {
+                    $query .= "`$column` = '$content'";
+                }
+            }
+
+        }
+
+        return $this->query($query);
+    }
+
+    /**
+     * Check if content exists in the database.
+     * 
+     * @param  array      $contents    Content to find
+     * @param  string     $operator    SQL operator
+     * @param  string     $type        Type of array
+     * @return boolean                 Check if content exists
+     */
+    public function exists(array $contents, $operator = 'AND', $type = 'both')
+    {
+        if (is_object($this->select($contents, $operator, $type))) {
+            if (!empty($this->results($type))) {
+                $this->select($contents, $operator, $type);
+                return true;
+            }
         }
         return false;
     }
 
-    public function addError($message)
-    {
-        $this->_errors[] = $message;
-    }
-
-    public function errors()
-    {
-        return $this->_errors;
-    }
-
     /**
-     * Insert new record to the database based on an array
+     * Get row count.
      * 
-     * @since    1.0.0
-     * @param    string               $table        The table where records must be made
-     * @param    array                $contents     Column names and content to be inserted as array value
-     * @param    string               $excluded     The excluded column from insert query.
+     * @return integer    Number    of results found
      */
-    public function insert($table, $contents, $excluded = array())
+    public function count()
     {
-        if (is_string($excluded) && empty($excluded) !== null) {
-            $excluded = explode(', ', $excluded);
-        }
-
-        // Add MAX_FILE_SIZE to excluded columns.
-        array_push($excluded, 'MAX_FILE_SIZE');
-        
-        $query = "INSERT INTO `{$table}` SET ";
-        
-        foreach ($contents as $column => $content) {
-
-            if ($this->remove($excluded, $column)) {
-                continue;
-            }
-            $query .= "`{$column}` = '{$content}', ";
-        
-        }
-        $query = $this->cutFrom($query);
-
-        return $this->query($query);
+        /**
+         * Count number of results.
+         */
+        return $this->_count;
     }
 
-    public function cutFrom($string, $where = '', $position = 'both')
+    private function cleaner($data, $type = '')
     {
-        if (empty($where)) {
-            $this->addError("Please fill this space.");
-            return;
-        }
-
-        switch ($position) {
-            case 'both':
-                $from = trim($string, $where);
+        switch($type) {
+            case 'none':
+                // useless do not reaffect just do nothing
+                //$data = $data;
                 break;
-            
-            case 'left':
-                $from = ltrim($string, $where);
+            case 'str':
+            case 'string':
+                settype( $data, 'string');
                 break;
-
-            case 'right':
-                $from = rtrim($string, $where);
+            case 'int':
+            case 'integer':
+                settype( $data, 'integer');
                 break;
-
+            case 'float':
+                settype( $data, 'float');
+                break;
+            case 'bool':
+            case 'boolean':
+                settype( $data, 'boolean');
+                break;
+            // Y-m-d H:i:s
+            // 2014-01-01 12:30:30
+            case 'datetime':
+                $data = trim($data);
+                $data = preg_replace('/[^\d\-: ]/i', '', $data);
+                preg_match( '/^([\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2})$/', $data, $matches );
+                $data = $matches[1];
+                break;
+            case 'ts2dt':
+                settype( $data, 'integer');
+                $data = date('Y-m-d H:i:s', $data);
+                break;
+            // bonus types
+            case 'hexcolor':
+                preg_match( '/(#[0-9abcdef]{6})/i', $data, $matches );
+                $data = $matches[1];
+                break;
+            case 'email':
+                $data = filter_var($data, FILTER_VALIDATE_EMAIL);
+                break;
             default:
-                $from = trim($string, $where);
                 break;
         }
-
-        return $from;
+        return $data;
     }
 
     /**
-     * Deletes a record from the database
+     * Get types of array elements.
      * 
-     * @param  string                $table    Table whose contents will be deleted 
-     * @param  string                $contents Content that will be deleted
-     * @param  string                $limit    Number limit of deleted results
-     * @param  boolean               $like     Like to search through the database table
-     * @return                                 Make a query
+     * @param  array  $data    Array of content
+     * @return array           Array of types
      */
-    public function delete($table, $contents = '', $limit = '', $like = false)
+    private function typper(array $data)
     {
-        $query = "DELETE FROM `{$table}` WHERE ";
-        
-        if(is_array($contents) && $contents != '') {
+        if (is_array($data)) {
 
-            foreach ($contents as $column => $content) {
-                if (true === boolval($like)) {
-                    $query .= "`{$column}` LIKE '%{$content}%' AND ";
+            $types = array();
+            foreach ($data as $key => $value) {
+                if ($key == 'email' || strpos($value, '@') !== false) {
+                    $types[] = 'email';
+                } elseif (is_numeric($value)) {
+                    
+                    $value = floatval($value);
+                    if ($value && intval($value) != $value) {
+                        $types[] = 'float';
+                    } else {
+                        $types[] = 'integer';
+                    }
+                } elseif (is_bool($value)) {
+                    $types[] = gettype($value);
+                } elseif (strpos($value, '#') !== false && mb_strlen($value) == 7) {
+                    $types[] = 'hexcolor';
                 } else {
-                    $query .= "`{$column}` = '{$content}' AND ";
+                    $types[] = gettype($value);
                 }
             }
-            $query = substr($query, 0, -5);
-
         }
 
-        if (intval($limit) >= 1) {
-            $query .= ' LIMIT ' . $limit;
-        }
-        
-        return $this->query($query);
+        return $types;
     }
 
-    /**
-     * Gets a single row from $table where $contents are found
-     * 
-     * @param  string                $table    Table name selected
-     * @param  string                $contents Content to be selected
-     * @param  string                $order    Order criteria with column name
-     * @param  string                $limit    Limit of result selected
-     * @param  boolean               $like     A search criteria that match column content
-     * @param  string                $operand  Operand used like AND
-     * @param  string                $cols     Columns to be selected 
-     * @return                                 Make a query to the database
-     */
-    public function select($table, $contents = '', $order = '', $limit = '', $like = false, $operand = 'AND', $cols = '*' )
+    public function escape($data, $types = array())
     {
-        // Catch Exceptions
-        if (trim($from) == '') {
-            return false;
-        }
-
-        $query = "SELECT {$cols} FROM `{$table}` WHERE ";
-        
-        if (is_array($contents) && ! empty($contents)) {
-
-            foreach ($contents as $column => $content) {
-                
-                if (true === boolval($like)) {
-                    $query .= "`{$column}` LIKE '%{$content}%' {$operand} ";
-                } else {
-                    $query .= "`{$column}` = '{$content}' {$operand} ";
-                }
+        if (is_array($data)) {
+            
+            if (!is_array($types) && is_string($types) && mb_strlen($types) >= 3) {
+                $types = explode('|', $types);
             }
-            $query = substr($query, 0, -(mb_strlen($operand) + 2));
+
+            $i = 0;
+            foreach ($data as $key => $value) {
+                if (!is_array($data[$key])) {
+                    $data[$key] = $this->cleaner($data[$key], count($types) ? $types[$i] : $types);
+                    $data[$key] = $this->_handler->real_escape_string($data[$key]);
+                }
+                $i++;
+            }
 
         } else {
-            $query = substr($query, 0, -6);
+            $data = $this->cleaner($data);
+            $data = $this->_handler->real_escape_string($data);
         }
 
-        if ($order != '') {
-            $query .= ' ORDER BY ' . $order;
-        }
-
-        if ($limit != '') {
-            $query .= ' LIMIT ' . $limit;
-        }
-
-        $result = $this->query($query);
-        
-        if(is_array($result))
-            return $result;
-
-        return array();
+        return $data;
     }
 
     /**
-     * Updates a record in the database
-     * 
-     * @param  string               $table    Table name to be updated
-     * @param  array                $contents Content to be add instead of old
-     * @param  arrat                $searches Content to be searched and replaced
-     * @param  string               $excluded Excluded columns
-     * @return                      Make an update query
-     */
-    public function update($table, $contents, $searches, $excluded = '')
-    {
-        // Check if all variable content has been set correctly.
-        if (empty(trim($table)) || !is_array($contents) || !is_array($searches)) {
-            return false;
-        }
-
-        if ($excluded == '') {
-            $excluded = array();
-        }
-
-        array_push($excluded, 'MAX_FILE_SIZE');
-        
-        $query = "UPDATE `{$table}` SET ";
-        
-        foreach ($contents as $column => $content) {
-            
-            if (in_array($column, $excluded)) {
-                continue;
-            }
-            $query .= "`{$column}` = '{$content}', ";
-        }
-        
-        $query = substr($query, 0, -2);
-        
-        $query .= ' WHERE ';
-        
-        foreach ($searches as $column => $search) {
-            $query .= "`{$column}` = '{$search}' AND ";
-        }
-
-        $query = substr($query, 0, -5);
-        return $this->query($query);
-    }
-
-    /**
-     * Class destructor that close connection
+     * Close database connection.
      */
     public function __destruct()
     {
-        $this->handler->close();
-    }
+        /**
+         * Check if has an active connection.
+         */
+        if (!$this->isConnected()) {
+            return;
+        }
 
+        /**
+         * Close mysqli connection.
+         */
+        $this->_handler->close();
+    }
 }
