@@ -31,39 +31,43 @@
 class Database
 {
     /**
-     * MySQL connection link
+     * MySQL connection link.
      * @var object
      */
     private $_handler;
     
     /**
-     * Holds the total number of records returned
+     * Holds the total number of records returned.
      * @var string
      */
     private $_count = 0;
 
     /**
-     * [$result description]
+     * Handle query results.
      * @var null
      */
     public $result = null;
 
     /**
-     * Holds an array of the result
+     * Holds an array of the result.
      * @var array
      */
     public $results = array();
 
+    /**
+     * Hanlde error message.
+     * @var mixed
+     */
     public $error = false;
 
     /**
-     * Object instance link
+     * Object instance link.
      * @var object
      */
     private static $_instance = null;
 
     /**
-     * Class constructor
+     * Class constructor.
      * 
      * @param array     $data Database information connection
      */
@@ -120,6 +124,9 @@ class Database
      */
     public function errorMessage()
     {
+        /**
+         * Hanlde error message if not connected.
+         */
         return $this->error;
     }
 
@@ -139,6 +146,7 @@ class Database
                 return $haystack[$key];
             }
         }
+
         return array();
     }
 
@@ -185,13 +193,13 @@ class Database
      * @param  string   $sql    SQL to execute
      * @return object           Handler of class
      */
-    public function query($sql)
+    public function query($query)
     {
         if (!$this->isConnected()) {
             return false;
         }
 
-        $this->result = $this->_handler->query($sql);
+        $this->result = $this->_handler->query($query);
 
         if (is_object($this->result)) {
             $this->_count = $this->result->num_rows;
@@ -252,12 +260,12 @@ class Database
 
             $contents = $this->escape($contents, $types);
 
-            $sql = "INSERT INTO `{$table}`";
-            $sql .= " (" . implode(', ', array_keys($contents)) . ") VALUES";
-            $sql .= " ('" . implode('\', \'', $contents) . "')";
+            $query = "INSERT INTO `{$table}`";
+            $query .= " (" . implode(', ', array_keys($contents)) . ") VALUES";
+            $query .= " ('" . implode('\', \'', $contents) . "')";
         }
 
-        return $this->query($sql);
+        return $this->query($query);
     }
 
     /**
@@ -278,26 +286,26 @@ class Database
 
         $contents = $this->escape($contents, $types);
 
-        $sql = "UPDATE `$table` SET ";
+        $query = "UPDATE `$table` SET ";
 
         $i = 0;
         foreach ($contents as $column => $content) {
             $i++;
             
             if (count($contents) != $i) {
-                $sql .= "`$column` = '$content', ";
+                $query .= "`$column` = '$content', ";
             } else {
-                $sql .= "`$column` = '$content'";
+                $query .= "`$column` = '$content'";
             }
         }
 
-        $sql .= " WHERE ";
+        $query .= " WHERE ";
 
         foreach ($conditons as $column => $content) {
-            $sql .= "`$column` = '$content'";
+            $query .= "`$column` = '$content'";
         }
 
-        return $this->query($sql);
+        return $this->query($query);
     }
 
     /**
@@ -319,19 +327,19 @@ class Database
 
             $conditions = $this->escape($conditions, $types);
 
-            $sql = "DELETE FROM `$table` WHERE ";
+            $query = "DELETE FROM `$table` WHERE ";
             $i = 0;
             foreach ($conditions as $column => $content) {
                 $i++;
-                $sql .= "`$column` = '$content' AND ";
+                $query .= "`$column` = '$content' AND ";
                 if (count($conditions) == $i) {
-                    $sql .= "`$column` = '$content'";
+                    $query .= "`$column` = '$content'";
                 }
             }
 
         }
 
-        return $this->query($sql);
+        return $this->query($query);
     }
 
     /**
@@ -360,6 +368,9 @@ class Database
      */
     public function count()
     {
+        /**
+         * Count number of results.
+         */
         return $this->_count;
     }
 
