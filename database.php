@@ -149,7 +149,7 @@ class Database
      * @param  string   $operator   SQL Operator
      * @return object               Handler of class
      */
-    public function select(array $contents, $operator = 'AND')
+    public function select(array $contents, $operator = 'AND', $types = array())
     {
         if ($this->in_array('table', $contents)) {
             
@@ -157,6 +157,8 @@ class Database
             unset($contents['table']);
         
         }
+
+        $contents = $this->escape($contents, $types);
 
         $sql = "SELECT * FROM `$table`";
 
@@ -237,7 +239,7 @@ class Database
      * @param  array    $contents   Content to insert
      * @return object               Handler of class
      */
-    public function insert(array $contents)
+    public function insert(array $contents, $types = array())
     {
         if (count($contents)) {
             
@@ -247,6 +249,8 @@ class Database
                 unset($contents['table']);
             
             }
+
+            $contents = $this->escape($contents, $types);
 
             $sql = "INSERT INTO `{$table}`";
             $sql .= " (" . implode(', ', array_keys($contents)) . ") VALUES";
@@ -263,7 +267,7 @@ class Database
      * @param  array    $conditons    Condition to meet
      * @return object                 Handler of class
      */
-    public function update(array $contents, array $conditons)
+    public function update(array $contents, array $conditons, $types = array())
     {
         if ($this->in_array('table', $contents)) {
             
@@ -271,6 +275,8 @@ class Database
             unset($contents['table']);
         
         }
+
+        $contents = $this->escape($contents, $types);
 
         $sql = "UPDATE `$table` SET ";
 
@@ -300,7 +306,7 @@ class Database
      * @param  array      $conditions     Content to delete
      * @return object                     Handler of class
      */
-    public function delete($conditions)
+    public function delete($conditions, $types = array())
     {
         if (count($conditions)) {
 
@@ -311,13 +317,20 @@ class Database
             
             }
 
+            $conditions = $this->escape($conditions, $types);
+
             $sql = "DELETE FROM `$table` WHERE ";
+            $i = 0;
             foreach ($conditions as $column => $content) {
-                $sql .= "`$column` = '$content'";
+                $i++;
+                $sql .= "`$column` = '$content' AND ";
+                if (count($conditions) == $i) {
+                    $sql .= "`$column` = '$content'";
+                }
             }
 
         }
-        return $sql;
+
         return $this->query($sql);
     }
 
@@ -395,6 +408,31 @@ class Database
             default:
                 break;
         }
+        return $data;
+    }
+
+    public function escape($data, $types = array())
+    {
+        if (is_array($data)) {
+            
+            if (!is_array($types) && is_string($types) && mb_strlen($types) >= 3) {
+                $types = explode('|', $types);
+            }
+
+            $i = 0;
+            foreach ($data as $key => $value) {
+                if (!is_array($data[$key])) {
+                    $data[$key] = $this->cleaner($data[$key], count($types) ? $types[$i] : $types);
+                    $data[$key] = $this->_handler->real_escape_string($data[$key]);
+                }
+                $i++;
+            }
+
+        } else {
+            $data = $this->cleaner($data);
+            $data = $this->_handler->real_escape_string($data);
+        }
+
         return $data;
     }
 
