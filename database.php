@@ -23,12 +23,12 @@
  *
  * @author     Anass Rahou
  * @package    MySQLi_Handler
- * @copyright  Copyright (c) 2017
+ * @copyright  Copyright (c) 2016 - 2017
  * @license    https://www.gnu.org/licenses/gpl-2.0.html
  * @version    1.2
  * @since      1.0
 */
-class Database
+class MySQLi_Handler
 {
     /**
      * MySQL connection link.
