@@ -25,7 +25,7 @@
  * @package    MySQLi_Handler
  * @copyright  Copyright (c) 2017
  * @license    https://www.gnu.org/licenses/gpl-2.0.html
- * @version    1.0 Beta
+ * @version    1.2
  * @since      1.0
 */
 class Database
@@ -59,6 +59,10 @@ class Database
      * @var mixed
      */
     public $error = false;
+
+    private $_affected;
+
+    private $_query = '';
 
     /**
      * Object instance link.
@@ -151,13 +155,41 @@ class Database
     }
 
     /**
+     * Main class query.
+     * 
+     * @param  string   $sql    SQL to execute
+     * @return object           Handler of class
+     */
+    public function query($query)
+    {
+        if (!$this->isConnected()) {
+            return false;
+        }
+
+        $this->_query = $query;
+
+        $this->result = $this->_handler->query($query);
+
+        if (is_object($this->result)) {
+            $this->_count = $this->result->num_rows;
+        }
+
+        return $this;
+    }
+
+    public function affected()
+    {
+        return $this->_handler->affected_rows;
+    }
+
+    /**
      * Perform a select query to the database.
      * 
      * @param  array    $contents   Content to insert
      * @param  string   $operator   SQL Operator
      * @return object               Handler of class
      */
-    public function select(array $contents, $operator = 'AND', $types = array())
+    public function select(array $contents, $types = array(), $operator = 'AND')
     {
         if ($this->in_array('table', $contents)) {
             
@@ -185,27 +217,6 @@ class Database
         }
 
         return $this->query($sql);
-    }
-
-    /**
-     * Main class query.
-     * 
-     * @param  string   $sql    SQL to execute
-     * @return object           Handler of class
-     */
-    public function query($query)
-    {
-        if (!$this->isConnected()) {
-            return false;
-        }
-
-        $this->result = $this->_handler->query($query);
-
-        if (is_object($this->result)) {
-            $this->_count = $this->result->num_rows;
-        }
-
-        return $this;
     }
 
     /**
@@ -350,11 +361,11 @@ class Database
      * @param  string     $type        Type of array
      * @return boolean                 Check if content exists
      */
-    public function exists(array $contents, $operator = 'AND', $type = 'both')
+    public function exists(array $contents, $types = array(), $operator = 'AND', $type = 'both')
     {
-        if (is_object($this->select($contents, $operator))) {
+        if (is_object($this->select($contents, $types, $operator, $type))) {
             if (!empty($this->results($type))) {
-                $this->select($contents, $operator);
+                $this->select($contents, $types, $operator, $type);
                 return true;
             }
         }
