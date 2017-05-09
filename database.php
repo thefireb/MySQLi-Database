@@ -216,23 +216,23 @@ class Database
 
         $contents = $this->escape($contents, $this->typper($contents));
 
-        $sql = "SELECT * FROM `$table`";
+        $query = "SELECT * FROM `$table`";
 
         if (count($contents) >= 1) {
-            $sql .= " WHERE ";
+            $query .= " WHERE ";
         }
 
         $i = 0;
         foreach ($contents as $column => $content) {
             $i++;
             if (count($contents) != $i) {
-                $sql .= "`$column` = '$content' $operator ";
+                $query .= "`$column` = '$content' $operator ";
             } else {
-                $sql .= "`$column` = '$content'";
+                $query .= "`$column` = '$content'";
             }
         }
 
-        return $this->query($sql);
+        return $this->query($query);
     }
 
     /**
@@ -241,7 +241,7 @@ class Database
      * @param  string   $type   Type of array
      * @return array            Results array
      */
-    public function results($type = 'both')
+    public function results($type = 'assoc')
     {
         if ($this->count()) {
 
@@ -262,7 +262,11 @@ class Database
                     break;
             }
 
-            $this->results = $this->result->fetch_array($type);
+            if ($this->count() > 1) {
+                $this->results = $this->result->fetch_all($type);
+            } else {
+                $this->results = $this->result->fetch_array($type);
+            }
         }
 
         return $this->results;
