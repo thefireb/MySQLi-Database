@@ -172,7 +172,7 @@ class Database
     {
         if (is_array($contents)) {
 
-            unset($user['table']);
+            unset($contents['table']);
             $types = [];
             foreach ($contents as $key => $value) {
                 $types[] = gettype($value);
