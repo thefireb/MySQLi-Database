@@ -61,13 +61,13 @@ class Database
     public $error = false;
 
     /**
-     * Count affected rows/
+     * Count affected rows.
      * @var integer
      */
     private $_affected;
 
     /**
-     * Query string.
+     * Store Query string.
      * @var string
      */
     private $_query = '';
