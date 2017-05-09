@@ -163,26 +163,6 @@ class Database
     }
 
     /**
-     * Get types of array elements.
-     * 
-     * @param  array  $contents    Array of content
-     * @return array               Array of types
-     */
-    public function typper(array $contents)
-    {
-        if (is_array($contents)) {
-
-            unset($contents['table']);
-            $types = [];
-            foreach ($contents as $key => $value) {
-                $types[] = gettype($value);
-            }
-        }
-
-        return $types;
-    }
-
-    /**
      * Main class query.
      * 
      * @param  string   $sql    SQL to execute
@@ -205,8 +185,16 @@ class Database
         return $this;
     }
 
+    /**
+     * Obtain Number of Affected Row
+     * 
+     * @return integer    Number of rows
+     */
     public function affected()
     {
+        /**
+         * Return number of rows.
+         */
         return $this->_handler->affected_rows;
     }
 
@@ -217,7 +205,7 @@ class Database
      * @param  string   $operator   SQL Operator
      * @return object               Handler of class
      */
-    public function select(array $contents, $types = array(), $operator = 'AND')
+    public function select(array $contents, $operator = 'AND')
     {
         if ($this->in_array('table', $contents)) {
             
@@ -226,7 +214,7 @@ class Database
         
         }
 
-        $contents = $this->escape($contents, $types);
+        $contents = $this->escape($contents, $this->typper($contents));
 
         $sql = "SELECT * FROM `$table`";
 
@@ -286,7 +274,7 @@ class Database
      * @param  array    $contents   Content to insert
      * @return object               Handler of class
      */
-    public function insert(array $contents, $types = array())
+    public function insert(array $contents)
     {
         if (count($contents)) {
             
@@ -297,7 +285,7 @@ class Database
             
             }
 
-            $contents = $this->escape($contents, $types);
+            $contents = $this->escape($contents, $this->typper($contents));
 
             $query = "INSERT INTO `{$table}`";
             $query .= " (" . implode(', ', array_keys($contents)) . ") VALUES";
@@ -314,7 +302,7 @@ class Database
      * @param  array    $conditons    Condition to meet
      * @return object                 Handler of class
      */
-    public function update(array $contents, array $conditons, $types = array())
+    public function update(array $contents, array $conditons)
     {
         if ($this->in_array('table', $contents)) {
             
@@ -323,7 +311,7 @@ class Database
         
         }
 
-        $contents = $this->escape($contents, $types);
+        $contents = $this->escape($contents, $this->typper($contents));
 
         $query = "UPDATE `$table` SET ";
 
@@ -337,6 +325,8 @@ class Database
                 $query .= "`$column` = '$content'";
             }
         }
+
+        $conditons = $this->escape($conditons, $this->typper($conditons));
 
         $query .= " WHERE ";
 
@@ -353,7 +343,7 @@ class Database
      * @param  array      $conditions     Content to delete
      * @return object                     Handler of class
      */
-    public function delete($conditions, $types = array())
+    public function delete($conditions)
     {
         if (count($conditions)) {
 
@@ -364,7 +354,7 @@ class Database
             
             }
 
-            $conditions = $this->escape($conditions, $types);
+            $conditions = $this->escape($conditions, $this->typper($conditions));
 
             $query = "DELETE FROM `$table` WHERE ";
             $i = 0;
@@ -389,11 +379,11 @@ class Database
      * @param  string     $type        Type of array
      * @return boolean                 Check if content exists
      */
-    public function exists(array $contents, $types = array(), $operator = 'AND', $type = 'both')
+    public function exists(array $contents, $operator = 'AND', $type = 'both')
     {
-        if (is_object($this->select($contents, $types, $operator, $type))) {
+        if (is_object($this->select($contents, $operator, $type))) {
             if (!empty($this->results($type))) {
-                $this->select($contents, $types, $operator, $type);
+                $this->select($contents, $operator, $type);
                 return true;
             }
         }
@@ -438,7 +428,7 @@ class Database
             // Y-m-d H:i:s
             // 2014-01-01 12:30:30
             case 'datetime':
-                $data = trim( $data );
+                $data = trim($data);
                 $data = preg_replace('/[^\d\-: ]/i', '', $data);
                 preg_match( '/^([\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2})$/', $data, $matches );
                 $data = $matches[1];
@@ -459,6 +449,41 @@ class Database
                 break;
         }
         return $data;
+    }
+
+    /**
+     * Get types of array elements.
+     * 
+     * @param  array  $data    Array of content
+     * @return array           Array of types
+     */
+    private function typper(array $data)
+    {
+        if (is_array($data)) {
+
+            $types = array();
+            foreach ($data as $key => $value) {
+                if ($key == 'email' || strpos($value, '@') !== false) {
+                    $types[] = 'email';
+                } elseif (is_numeric($value)) {
+                    
+                    $value = floatval($value);
+                    if ($value && intval($value) != $value) {
+                        $types[] = 'float';
+                    } else {
+                        $types[] = 'integer';
+                    }
+                } elseif (is_bool($value)) {
+                    $types[] = gettype($value);
+                } elseif (strpos($value, '#') !== false && mb_strlen($value) == 7) {
+                    $types[] = 'hexcolor';
+                } else {
+                    $types[] = gettype($value);
+                }
+            }
+        }
+
+        return $types;
     }
 
     public function escape($data, $types = array())
