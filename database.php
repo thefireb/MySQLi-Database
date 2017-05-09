@@ -60,8 +60,16 @@ class Database
      */
     public $error = false;
 
+    /**
+     * Count affected rows.
+     * @var integer
+     */
     private $_affected;
 
+    /**
+     * Store Query string.
+     * @var string
+     */
     private $_query = '';
 
     /**
@@ -152,6 +160,26 @@ class Database
         }
 
         return array();
+    }
+
+    /**
+     * Get types of array elements.
+     * 
+     * @param  array  $contents    Array of content
+     * @return array               Array of types
+     */
+    public function typper(array $contents)
+    {
+        if (is_array($contents)) {
+
+            unset($contents['table']);
+            $types = [];
+            foreach ($contents as $key => $value) {
+                $types[] = gettype($value);
+            }
+        }
+
+        return $types;
     }
 
     /**
