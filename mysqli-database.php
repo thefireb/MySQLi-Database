@@ -153,10 +153,8 @@ class MySQLi_Handler
     {
         $keys = array_keys($haystack);
 
-        foreach ($haystack as $k => $v) {
-            if (in_array($key, $keys)) {
-                return $haystack[$key];
-            }
+        if (in_array($key, $keys)) {
+            return $haystack[$key];
         }
 
         return array();
@@ -238,10 +236,11 @@ class MySQLi_Handler
     /**
      * Results from query.
      * 
-     * @param  string   $type   Type of array
-     * @return array            Results array
+     * @param  integer $limit    Limit of matched results.
+     * @param  string   $type    Type of array
+     * @return array             Results array
      */
-    public function results($type = 'assoc')
+    public function results($limit = 1, $type = 'both')
     {
         if ($this->count()) {
 
@@ -262,11 +261,26 @@ class MySQLi_Handler
                     break;
             }
 
+            $i   = 1;
+            $new = [];
             if ($this->count() > 1) {
                 $this->results = $this->result->fetch_all($type);
-            } else {
+
+                foreach ($this->results as $key => $value) {
+                    if ($i <= $limit) {
+                        $new[$i++] = $value;
+                    } else {
+                        break;
+                    }
+                }
+            } elseif ($this->count() == 1) {
                 $this->results = $this->result->fetch_array($type);
+                
+                foreach ($this->results as $key => $value) {
+                    $new[$i] = $this->results;
+                }
             }
+            $this->results = $new;
         }
 
         return $this->results;
@@ -383,10 +397,10 @@ class MySQLi_Handler
      * @param  string     $type        Type of array
      * @return boolean                 Check if content exists
      */
-    public function exists(array $contents, $operator = 'AND', $type = 'both')
+    public function exists(array $contents, $operator = 'AND', $limit = 1, $type = 'both')
     {
         if (is_object($this->select($contents, $operator, $type))) {
-            if (!empty($this->results($type))) {
+            if (!empty($this->results($limit, $type))) {
                 $this->select($contents, $operator, $type);
                 return true;
             }
