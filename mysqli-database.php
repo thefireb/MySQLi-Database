@@ -236,10 +236,11 @@ class MySQLi_Handler
     /**
      * Results from query.
      * 
-     * @param  string   $type   Type of array
-     * @return array            Results array
+     * @param  integer $limit    Limit of matched results.
+     * @param  string   $type    Type of array
+     * @return array             Results array
      */
-    public function results($limit = 1, $type = 'assoc')
+    public function results($limit = 1, $type = 'both')
     {
         if ($this->count()) {
 
