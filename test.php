@@ -3,23 +3,56 @@
 /**
  * Require main class file
  */
-require_once dirname(__FILE__) . '/mysqli-database.php';
+require_once dirname(__FILE__) . '/database.php';
 
 /**
  * Setup database connection with Singleton pattern.
  * @var object
  */
-$db = MySQLi_Handler::getInstance([
+$db = Database::getInstance([
     'hostname' => 'localhost',
     'username' => 'homestead',
     'password' => 'secret',
-    'database' => 'anass',
+    'database' => 'examples',
 ]);
+
+$user = [
+    'table' => 'names',
+    'lname' => 'Zouhir',
+    'age'   => 25,
+    /*'fname' => 'Yassine',
+    'email' => 'yasiso@example.com',*/
+];
+
+if ($db->exists($user)) {
+    foreach ($result = $db->results() as $key => $value) {
+        if (is_array($result[$key])) {
+            foreach ($value as $k => $v) {
+                echo $k, ' -- ', $v, '<br>';
+            }
+            echo '<br>';
+        } else {
+            echo $key, ' -- ', $value, '<br>';
+        }
+    }
+} else {
+    var_dump($db->insert($user));
+}
+
+die();
 
 /**
  * Make a simple query to the database
  * @var object
  */
-$result = $db->query("SELECT * FROM names");
+if ($db->exists($user)) {
+    foreach ($db->results('assoc') as $key => $value) {
+        echo $key, " is ", $value, "<br>"; 
+    }
+} elseif (!$db->exists($user)) {
+    $db->insert($user);
 
-var_dump($result->results('assoc'));
+    if ($db->affected()) {
+        echo 'User Added.';
+    }
+}
