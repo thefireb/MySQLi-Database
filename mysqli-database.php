@@ -409,6 +409,26 @@ class MySQLi_Handler
     }
 
     /**
+     * Setup form input type
+     * 
+     * @param  string    $key      Key of an input array
+     * @param  string    $value    value of an input array
+     * @return boolean             True if value exists
+     */
+    public function input($key, $value = null)
+    {
+        if (array_key_exists($key, $_POST) && $_POST[$key] == $value) {
+            return true;
+        }
+
+        if (array_key_exists($key, $_GET) && $_GET[$key] == $value) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Get row count.
      * 
      * @return integer    Number    of results found
