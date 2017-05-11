@@ -441,6 +441,13 @@ class MySQLi_Handler
         return $this->_count;
     }
 
+    /**
+     * Clean variable data type
+     * 
+     * @param  string    $data    Data to be cleaned
+     * @param  string    $type    Type of data
+     * @return mixed              Cleaned type of data
+     */
     private function cleaner($data, $type = '')
     {
         switch($type) {
@@ -524,6 +531,13 @@ class MySQLi_Handler
         return $types;
     }
 
+    /**
+     * Escape MySQL data
+     * 
+     * @param  array  $data     Data to escape
+     * @param  array  $types    Force type of data
+     * @return array            Cleaned and escaped data
+     */
     public function escape($data, $types = array())
     {
         if (is_array($data)) {
