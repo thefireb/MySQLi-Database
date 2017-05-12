@@ -14,3 +14,5 @@ Also allows you to obtain results in the form of arrays, and create a foreach lo
 ## How to use
 
 To view how to use this class, you can visit the [example.php](https://github.com/ranss/MySQLi-Database/blob/master/example.php) file in the same repository.
+
+Have you any question? don't hesitate to communicate with me directly.
