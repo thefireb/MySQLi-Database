@@ -1,90 +1,79 @@
 <?php
 
 /**
- * Require main class file
+ * Require class file.
  */
 require_once dirname(__FILE__) . '/mysqli-database.php';
 
 /**
- * Setup database connection with Singleton pattern.
+ * Setup database connection
  * @var object
  */
-$db = Database::getInstance([
-    'hostname' => 'localhost',
-    'username' => 'homestead',
-    'password' => 'secret',
-    'database' => 'examples',
+$db = MySQLi_Handler::getInstance([
+    'hostname' => 'localhost', 
+    'username' => 'homestead', 
+    'password' => 'secret', 
+    'database' => 'examples', 
 ]);
 
 /**
- * Check if connected to the database.
+ * Check if we have a connection
  */
 if ($db->isConnected()) {
     
-    $content = [
-        'table' => 'names',
-        'fname' => 'Anass',
-        'lname' => 'Rahou',
-        'age'   => 28,
-        'email' => 'anass@example.com',
-    ];
-
-    $conditions = [
-        'id'    => 28,
-        'email' => 'anass@example.com',
-    ];
+    /**
+     * Check if array data exists.
+     */
+    if ($db->exists($data)) {
+        
+        /**
+         * Results with optional parameters.
+         */
+        $db->results(2, 'assoc');
+    
+    }
 
     /**
-     * Check if have results.
+     * Insert new data to database
      */
-    if ($db->exists($content)) {
-
+    if ($db->insert($data)) {
+        
         /**
-         * Foreach result content.
+         * Echo number of row inserted.
          */
-        foreach ($db->results('assoc') as $key => $value) {
-            echo $value, ", ";
-        }
-
-    } else {
-
-        /**
-         * Insert content.
-         */
-        $db->insert($content);
+        echo $db->affected();
 
     }
 
     /**
-     * Update database content.
+     * Update data on the database.
      */
-    if ($db->update($content, $conditions)) {
-
-        echo 'User has been updated.';
+    if ($db->update($data)) {
+        
+        /**
+         * Echo number of row updated.
+         */
+        echo $db->affected();
 
     }
 
     /**
-     * Find fname value and delete row.
+     * Delete data from the database.
      */
-    $delete = [
-        'table' => 'names',
-        'fname' => 'Anass',
-    ];
-
-    /**
-     * Delete from 'names' where 'fname' = 'Anass'.
-     */
-    if ($db->delete($delete)) {
-
-        echo 'User has been deleted.';
+    if ($db->delete($data)) {
+        
+        /**
+         * Echo number of row deleted.
+         */
+        echo $db->affected();
 
     }
 
 } else {
 
     /**
-     * Fire Database error message.
+     * Echo database error message.
      */
-    echo $db->errorMessage();
+    echo $db->getMessage();
+
 }
