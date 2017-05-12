@@ -374,16 +374,21 @@ class MySQLi_Handler
 
             $conditions = $this->escape($conditions, $this->typper($conditions));
 
-            $query = "DELETE FROM `$table` WHERE ";
+            $query = "DELETE FROM `$table`";
             $i = 0;
-            foreach ($conditions as $column => $content) {
-                $i++;
-                $query .= "`$column` = '$content' AND ";
-                if (count($conditions) == $i) {
-                    $query .= "`$column` = '$content'";
+
+            if (count($conditions)) {
+                $query .= " WHERE ";
+                
+                foreach ($conditions as $column => $content) {
+                    $i++;
+                    $query .= "`$column` = '$content' AND ";
+                    if (count($conditions) == $i) {
+                        $query .= "`$column` = '$content'";
+                    }
                 }
             }
-
+        
         }
 
         return $this->query($query);
@@ -415,7 +420,7 @@ class MySQLi_Handler
      * @param  string    $value    value of an input array
      * @return boolean             True if value exists
      */
-    public function input($key, $value = null)
+    public static function input($key, $value = null)
     {
         if (array_key_exists($key, $_POST) && $_POST[$key] == $value) {
             return true;
@@ -426,6 +431,28 @@ class MySQLi_Handler
         }
 
         return false;
+    }
+
+    /**
+     * Check post type
+     * 
+     * @param     string    $key     Name of field
+     * @param     string    $type    input type
+     * @return    boolean            True for successful check
+     */
+    public static function submit($key, $type = 'post')
+    {
+        switch ($type) {
+            case 'post':
+            case 'POST':
+                return isset($_POST[$key]) ? true : false;
+                break;
+            
+            case 'get':
+            case 'GET':
+                return isset($_GET[$key]) ? true : false;
+                break;
+        }
     }
 
     /**
