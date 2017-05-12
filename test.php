@@ -1,58 +1,72 @@
 <?php
 
-/**
- * Require main class file
- */
-require_once dirname(__FILE__) . '/database.php';
+require_once dirname(__FILE__) . '/mysqli-database.php';
 
-/**
- * Setup database connection with Singleton pattern.
- * @var object
- */
-$db = Database::getInstance([
-    'hostname' => 'localhost',
-    'username' => 'homestead',
-    'password' => 'secret',
-    'database' => 'examples',
+$db = MySQLi_Handler::getInstance([
+    'hostname' => 'localhost', 
+    'username' => 'homestead', 
+    'password' => 'secret', 
+    'database' => 'examples', 
 ]);
 
-$user = [
-    'table' => 'names',
-    'lname' => 'Zouhir',
-    'age'   => 25,
-    /*'fname' => 'Yassine',
-    'email' => 'yasiso@example.com',*/
-];
-
-if ($db->exists($user)) {
-    foreach ($result = $db->results() as $key => $value) {
-        if (is_array($result[$key])) {
-            foreach ($value as $k => $v) {
-                echo $k, ' -- ', $v, '<br>';
-            }
-            echo '<br>';
-        } else {
-            echo $key, ' -- ', $value, '<br>';
-        }
-    }
-} else {
-    var_dump($db->insert($user));
-}
-
-die();
-
 /**
- * Make a simple query to the database
- * @var object
+ * Check if we have a connection
  */
-if ($db->exists($user)) {
-    foreach ($db->results('assoc') as $key => $value) {
-        echo $key, " is ", $value, "<br>"; 
+if ($db->isConnected()) {
+    
+    /**
+     * Check if array data exists.
+     */
+    if ($db->exists($data)) {
+        
+        /**
+         * Results with optional parameters.
+         */
+        $db->results(2, 'assoc');
+    
     }
-} elseif (!$db->exists($user)) {
-    $db->insert($user);
 
-    if ($db->affected()) {
-        echo 'User Added.';
+    /**
+     * Insert new data to database
+     */
+    if ($db->insert($data)) {
+        
+        /**
+         * Echo number of row inserted.
+         */
+        $db->affected();
+
     }
+
+    /**
+     * Update data on the database.
+     */
+    if ($db->update($data)) {
+        
+        /**
+         * Echo number of row updated.
+         */
+        $db->affected();
+
+    }
+
+    /**
+     * Delete data from the database.
+     */
+    if ($db->delete($data)) {
+        
+        /**
+         * Echo number of row deleted.
+         */
+        $db->affected();
+
+    }
+
+} else {
+
+    /**
+     * Echo database error message.
+     */
+    echo $db->getMessage();
+
 }
