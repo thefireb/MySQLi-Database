@@ -134,7 +134,7 @@ class MySQLi_Handler
      * 
      * @return string    Error message
      */
-    public function errorMessage()
+    public function getMessage()
     {
         /**
          * Hanlde error message if not connected.
@@ -240,7 +240,7 @@ class MySQLi_Handler
      * @param  string   $type    Type of array
      * @return array             Results array
      */
-    public function results($limit = 1, $type = 'both')
+    public function results($limit = 1, $type = 'assoc')
     {
         if ($this->count()) {
 
