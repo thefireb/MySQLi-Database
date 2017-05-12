@@ -13,26 +13,4 @@ Also allows you to obtain results in the form of arrays, and create a foreach lo
 
 ## How to use
 
-this is how to use this class to make some tasks to your database.
-
-```php
-/**
- * Setup database connection with Singleton pattern.
- * @var object
- */
-$db = Database::getInstance([
-    'hostname' => 'localhost',
-    'username' => 'homestead',
-    'password' => 'secret',
-    'database' => 'examples',
-]);
-
-/**
- * Check if connextion exists.
- */
-if ($db->isConnected()) {
-    echo 'Connected';
-} else {
-    echo $db->errorMessage();
-}
-```
+To view how to use this class, you can visit the [example.php](https://github.com/ranss/MySQLi-Database/blob/master/example.php) file in the same repository.
