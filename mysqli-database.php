@@ -218,15 +218,15 @@ class MySQLi_Handler
 
         if (count($contents) >= 1) {
             $query .= " WHERE ";
-        }
 
-        $i = 0;
-        foreach ($contents as $column => $content) {
-            $i++;
-            if (count($contents) != $i) {
-                $query .= "`$column` = '$content' $operator ";
-            } else {
-                $query .= "`$column` = '$content'";
+            $i = 0;
+            foreach ($contents as $column => $content) {
+                $i++;
+                if (count($contents) != $i) {
+                    $query .= "`$column` = '$content' $operator ";
+                } else {
+                    $query .= "`$column` = '$content'";
+                }
             }
         }
 
