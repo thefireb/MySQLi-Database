@@ -21,7 +21,7 @@ class PDOer
      * Clone
      * @return string Advice message.
      */
-    protected function __clone()
+    public function __clone()
     {
         die('Cheatin&#8217; huh?');
     }
