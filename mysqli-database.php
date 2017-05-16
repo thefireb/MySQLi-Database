@@ -46,19 +46,19 @@ class MySQLi_Handler
      * Handle query results.
      * @var null
      */
-    public $result = null;
+    private $_result = null;
 
     /**
      * Holds an array of the result.
      * @var array
      */
-    public $results = array();
+    private $_results = array();
 
     /**
      * Hanlde error message.
      * @var mixed
      */
-    public $error = false;
+    private $_error = false;
 
     /**
      * Count affected rows.
@@ -96,7 +96,7 @@ class MySQLi_Handler
          * If no connection, then setup an error message.
          */
         if ($this->_handler->connect_errno) {
-            $this->error = $this->_handler->connect_error;
+            $this->_error = $this->_handler->connect_error;
         }
     }
 
@@ -122,7 +122,7 @@ class MySQLi_Handler
      */
     public function isConnected()
     {
-        if ($this->error === false) {
+        if ($this->_error === false) {
             return true;
         } else {
             return false;
@@ -139,7 +139,7 @@ class MySQLi_Handler
         /**
          * Hanlde error message if not connected.
          */
-        return $this->error;
+        return $this->_error;
     }
 
     /**
@@ -174,10 +174,10 @@ class MySQLi_Handler
 
         $this->_query = $query;
 
-        $this->result = $this->_handler->query($query);
+        $this->_result = $this->_handler->query($query);
 
-        if (is_object($this->result)) {
-            $this->_count = $this->result->num_rows;
+        if (is_object($this->_result)) {
+            $this->_count = $this->_result->num_rows;
         }
 
         return $this;
@@ -259,9 +259,9 @@ class MySQLi_Handler
             $i   = 1;
             $new = [];
             if ($this->count() > 1) {
-                $this->results = $this->result->fetch_all($type);
+                $this->_results = $this->_result->fetch_all($type);
 
-                foreach ($this->results as $key => $value) {
+                foreach ($this->_results as $key => $value) {
                     if ($i <= $limit) {
                         $new[$i++] = $value;
                     } else {
@@ -269,16 +269,16 @@ class MySQLi_Handler
                     }
                 }
             } elseif ($this->count() == 1) {
-                $this->results = $this->result->fetch_array($type);
+                $this->_results = $this->_result->fetch_array($type);
                 
-                foreach ($this->results as $key => $value) {
-                    $new[$i] = $this->results;
+                foreach ($this->_results as $key => $value) {
+                    $new[$i] = $this->_results;
                 }
             }
-            $this->results = $new;
+            $this->_results = $new;
         }
 
-        return $this->results;
+        return $this->_results;
     }
 
     /**
@@ -396,7 +396,7 @@ class MySQLi_Handler
     public function exists(array $contents, $operator = 'AND', $limit = 1, $type = 'both')
     {
         if (is_object($this->select($contents, $operator, $type))) {
-            if (!empty($this->results($limit, $type))) {
+            if (!empty($this->_results($limit, $type))) {
                 $this->select($contents, $operator, $type);
                 return true;
             }
