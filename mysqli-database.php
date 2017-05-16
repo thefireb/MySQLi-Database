@@ -25,7 +25,7 @@
  * @package    MySQLi_Handler
  * @copyright  Copyright (c) 2016 - 2017
  * @license    https://www.gnu.org/licenses/gpl-2.0.html
- * @version    1.2
+ * @version    1.3
  * @since      1.0
 */
 class MySQLi_Handler
@@ -219,16 +219,11 @@ class MySQLi_Handler
         if (count($contents) >= 1) {
             $query .= " WHERE ";
 
-            $i = 0;
             foreach ($contents as $column => $content) {
-                $i++;
-                if (count($contents) != $i) {
-                    $query .= "`$column` = '$content' $operator ";
-                } else {
-                    $query .= "`$column` = '$content'";
-                }
+                $query .= "`$column` = '$content' $operator ";
             }
         }
+        $query = trim($query, "$operator ");
 
         return $this->query($query);
     }
@@ -333,16 +328,12 @@ class MySQLi_Handler
 
         $query = "UPDATE `$table` SET ";
 
-        $i = 0;
         foreach ($contents as $column => $content) {
-            $i++;
-            
             if (count($contents) != $i) {
                 $query .= "`$column` = '$content', ";
-            } else {
-                $query .= "`$column` = '$content'";
             }
         }
+        $query = trim($query, ", ");
 
         $conditons = $this->escape($conditons, $this->typper($conditons));
 
