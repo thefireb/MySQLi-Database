@@ -10,7 +10,7 @@ class PDOer
     private static $_instance = null;
 
     /**
-     * Constructor
+     * Constructor.
      */
     protected function __construct()
     {
@@ -18,7 +18,7 @@ class PDOer
     }
 
     /**
-     * Clone
+     * Cloning is prohibited.
      * @return string Advice message.
      */
     public function __clone()
